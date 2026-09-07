@@ -1,0 +1,11 @@
+order_id,order_date,region,product,quantity,unit_price,revenue
+1,2025-01-05,North,Laptop,2,800,1600
+2,2025-01-08,South,Phone,5,500,2500
+3,2025-01-12,North,Monitor,3,300,900
+4,2025-02-03,West,Laptop,1,800,800
+5,2025-02-10,South,Phone,4,500,2000
+6,2025-02-15,East,Keyboard,10,50,500
+7,2025-03-02,North,Laptop,3,800,2400
+8,2025-03-11,West,Phone,2,500,1000
+9,2025-03-18,East,Monitor,4,300,1200
+10,2025-03-25,South,Laptop,2,800,1600
