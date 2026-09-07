@@ -31,7 +31,7 @@ def tool_node(state: AgentState) -> AgentState:
         raise ValueError(f"Unsupported tool: {tool}")
 
     sql = generate_sql(
-        question=state["question"],
+        question=step,
         schema=state["schema"],
     )
 

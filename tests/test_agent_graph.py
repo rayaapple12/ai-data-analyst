@@ -28,8 +28,10 @@ def test_agent_graph(monkeypatch):
             "SELECT SUM(revenue) AS total_revenue FROM sales",
         ]
     )
+    generated_questions = []
 
     def fake_generate_sql(question, schema):
+        generated_questions.append((question, schema))
         return SQLQuery(query=next(sql_queries))
 
     monkeypatch.setattr(
@@ -59,6 +61,10 @@ def test_agent_graph(monkeypatch):
     ]
     assert result["schema"] == schema
     assert result["current_step"] == 2
+    assert generated_questions == [
+        ("query the sales table for row count", schema),
+        ("query the sales table for total revenue", schema),
+    ]
     assert [call["tool"] for call in result["tool_calls"]] == [
         "sql",
         "sql",
