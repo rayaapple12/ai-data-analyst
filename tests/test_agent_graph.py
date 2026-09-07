@@ -8,8 +8,7 @@ def test_agent_graph(monkeypatch):
             (),
             {
                 "steps": [
-                    "group sales by region",
-                    "calculate total revenue",
+                    "query the sales table",
                 ]
             },
         )()
@@ -23,11 +22,12 @@ def test_agent_graph(monkeypatch):
 
     result = graph.invoke(
         {
-            "question": "Which region generated the most revenue?",
+            "question": "How many sales are there?",
         }
     )
 
     assert result["plan"] == [
-        "group sales by region",
-        "calculate total revenue",
+        "query the sales table",
     ]
+    assert result["tool_calls"][0]["tool"] == "sql"
+    assert result["results"][0]["row_count"] == 10
