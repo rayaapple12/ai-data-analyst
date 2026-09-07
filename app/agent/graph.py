@@ -1,6 +1,7 @@
 from langgraph.graph import END, START, StateGraph
 
 from app.agent.planner import generate_plan
+from app.agent.sql_generator import generate_sql
 from app.agent.state import AgentState
 from app.agent.tool_selector import select_tool
 from app.tools.sql_tool import execute_sql
@@ -19,23 +20,32 @@ def tool_node(state: AgentState) -> AgentState:
     step = state["plan"][0]
     tool = select_tool(step)
 
-    if tool == "sql":
-        result = execute_sql(
-            "SELECT COUNT(*) AS row_count FROM sales"
-        )
+    if tool != "sql":
+        raise ValueError(f"Unsupported tool: {tool}")
 
-        return {
-            **state,
-            "tool_calls": [
-                {
-                    "tool": tool,
-                    "step": step,
-                }
-            ],
-            "results": result,
-        }
+    schema = state.get(
+        "schema",
+        "sales(order_id, order_date, region, product, quantity, unit_price, revenue)",
+    )
 
-    raise ValueError(f"Unsupported tool: {tool}")
+    sql = generate_sql(
+        question=state["question"],
+        schema=schema,
+    )
+
+    result = execute_sql(sql.query)
+
+    return {
+        **state,
+        "tool_calls": [
+            {
+                "tool": tool,
+                "step": step,
+                "query": sql.query,
+            }
+        ],
+        "results": result,
+    }
 
 
 def build_graph():
