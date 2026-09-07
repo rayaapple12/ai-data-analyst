@@ -13,6 +13,7 @@ def planner_node(state: AgentState) -> AgentState:
     return {
         **state,
         "plan": plan.steps,
+        "current_step": 0,
     }
 
 

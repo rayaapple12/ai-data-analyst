@@ -6,6 +6,7 @@ class AgentState(TypedDict, total=False):
     dataset_name: str
     schema: dict[str, Any]
     plan: list[str]
+    current_step: int
     tool_calls: list[dict[str, Any]]
     results: list[dict[str, Any]]
     answer: str
