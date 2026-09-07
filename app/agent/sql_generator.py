@@ -1,3 +1,5 @@
+import json
+
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
@@ -12,7 +14,7 @@ class SQLQuery(BaseModel):
 
 def generate_sql(
     question: str,
-    schema: str,
+    schema: dict[str, list[dict[str, str]]],
 ) -> SQLQuery:
     model = ChatOpenAI(
         model=settings.llm_model,
@@ -25,7 +27,7 @@ def generate_sql(
 Generate a read-only PostgreSQL query to answer the user's question.
 
 Database schema:
-{schema}
+{json.dumps(schema, indent=2)}
 
 Question:
 {question}

@@ -3,16 +3,19 @@ from langgraph.graph import END, START, StateGraph
 from app.agent.planner import generate_plan
 from app.agent.sql_generator import generate_sql
 from app.agent.state import AgentState
+from app.data.schema import discover_schema
 from app.agent.tool_selector import select_tool
 from app.tools.sql_tool import execute_sql
 
 
 def planner_node(state: AgentState) -> AgentState:
     plan = generate_plan(state["question"])
+    schema = discover_schema()
 
     return {
         **state,
         "plan": plan.steps,
+        "schema": schema,
         "current_step": 0,
         "tool_calls": [],
         "results": [],
@@ -27,14 +30,9 @@ def tool_node(state: AgentState) -> AgentState:
     if tool != "sql":
         raise ValueError(f"Unsupported tool: {tool}")
 
-    schema = state.get(
-        "schema",
-        "sales(order_id, order_date, region, product, quantity, unit_price, revenue)",
-    )
-
     sql = generate_sql(
         question=state["question"],
-        schema=schema,
+        schema=state["schema"],
     )
 
     result = execute_sql(sql.query)

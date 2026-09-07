@@ -3,6 +3,13 @@ from app.agent.sql_generator import SQLQuery
 
 
 def test_agent_graph(monkeypatch):
+    schema = {
+        "sales": [
+            {"name": "order_id", "type": "INTEGER"},
+            {"name": "revenue", "type": "NUMERIC"},
+        ]
+    }
+
     def fake_generate_plan(question):
         return type(
             "Plan",
@@ -30,6 +37,10 @@ def test_agent_graph(monkeypatch):
         fake_generate_plan,
     )
     monkeypatch.setattr(
+        "app.agent.graph.discover_schema",
+        lambda: schema,
+    )
+    monkeypatch.setattr(
         "app.agent.graph.generate_sql",
         fake_generate_sql,
     )
@@ -46,6 +57,7 @@ def test_agent_graph(monkeypatch):
         "query the sales table for row count",
         "query the sales table for total revenue",
     ]
+    assert result["schema"] == schema
     assert result["current_step"] == 2
     assert [call["tool"] for call in result["tool_calls"]] == [
         "sql",
