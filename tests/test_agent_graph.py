@@ -9,15 +9,21 @@ def test_agent_graph(monkeypatch):
             (),
             {
                 "steps": [
-                    "query the sales table",
+                    "query the sales table for row count",
+                    "query the sales table for total revenue",
                 ]
             },
         )()
 
+    sql_queries = iter(
+        [
+            "SELECT COUNT(*) AS row_count FROM sales",
+            "SELECT SUM(revenue) AS total_revenue FROM sales",
+        ]
+    )
+
     def fake_generate_sql(question, schema):
-        return SQLQuery(
-            query="SELECT COUNT(*) AS row_count FROM sales"
-        )
+        return SQLQuery(query=next(sql_queries))
 
     monkeypatch.setattr(
         "app.agent.graph.generate_plan",
@@ -37,10 +43,21 @@ def test_agent_graph(monkeypatch):
     )
 
     assert result["plan"] == [
-        "query the sales table",
+        "query the sales table for row count",
+        "query the sales table for total revenue",
     ]
-    assert result["tool_calls"][0]["tool"] == "sql"
-    assert result["tool_calls"][0]["query"] == (
-        "SELECT COUNT(*) AS row_count FROM sales"
-    )
+    assert result["current_step"] == 2
+    assert [call["tool"] for call in result["tool_calls"]] == [
+        "sql",
+        "sql",
+    ]
+    assert [call["step"] for call in result["tool_calls"]] == [
+        "query the sales table for row count",
+        "query the sales table for total revenue",
+    ]
+    assert [call["query"] for call in result["tool_calls"]] == [
+        "SELECT COUNT(*) AS row_count FROM sales",
+        "SELECT SUM(revenue) AS total_revenue FROM sales",
+    ]
     assert result["results"][0]["row_count"] == 10
+    assert result["results"][1]["total_revenue"] == 14500

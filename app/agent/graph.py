@@ -14,11 +14,14 @@ def planner_node(state: AgentState) -> AgentState:
         **state,
         "plan": plan.steps,
         "current_step": 0,
+        "tool_calls": [],
+        "results": [],
     }
 
 
 def tool_node(state: AgentState) -> AgentState:
-    step = state["plan"][0]
+    current_step = state["current_step"]
+    step = state["plan"][current_step]
     tool = select_tool(step)
 
     if tool != "sql":
@@ -38,15 +41,24 @@ def tool_node(state: AgentState) -> AgentState:
 
     return {
         **state,
+        "current_step": current_step + 1,
         "tool_calls": [
+            *state.get("tool_calls", []),
             {
                 "tool": tool,
                 "step": step,
                 "query": sql.query,
             }
         ],
-        "results": result,
+        "results": [*state.get("results", []), *result],
     }
+
+
+def route_after_tool(state: AgentState) -> str:
+    if state["current_step"] < len(state["plan"]):
+        return "tool"
+
+    return END
 
 
 def build_graph():
@@ -57,6 +69,13 @@ def build_graph():
 
     graph.add_edge(START, "planner")
     graph.add_edge("planner", "tool")
-    graph.add_edge("tool", END)
+    graph.add_conditional_edges(
+        "tool",
+        route_after_tool,
+        {
+            "tool": "tool",
+            END: END,
+        },
+    )
 
     return graph.compile()
