@@ -1,21 +1,24 @@
 from langgraph.graph import END, START, StateGraph
 
+from app.agent.planner import generate_plan
 from app.agent.state import AgentState
 
 
-def analyst_node(state: AgentState) -> AgentState:
+def planner_node(state: AgentState) -> AgentState:
+    plan = generate_plan(state["question"])
+
     return {
         **state,
-        "answer": "Agent graph initialized.",
+        "plan": plan.steps,
     }
 
 
 def build_graph():
     graph = StateGraph(AgentState)
 
-    graph.add_node("analyst", analyst_node)
+    graph.add_node("planner", planner_node)
 
-    graph.add_edge(START, "analyst")
-    graph.add_edge("analyst", END)
+    graph.add_edge(START, "planner")
+    graph.add_edge("planner", END)
 
     return graph.compile()
